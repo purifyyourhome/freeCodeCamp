@@ -1,47 +1,50 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { createSelector } from 'reselect';
 import { Button } from '@freecodecamp/react-bootstrap';
 
-import { hardGoTo } from '../../../redux';
+import { isSignedInSelector } from '../../../redux';
 import { apiLocation } from '../../../../config/env.json';
+
+import { gtagReportConversion } from '../../../analytics/gtag';
 
 import './login.css';
 
-const mapStateToProps = () => ({});
-const mapDispatchToProps = dispatch => ({
-  navigate: location => dispatch(hardGoTo(location))
-});
-
-const createOnClick = navigate => e => {
-  e.preventDefault();
-  return navigate(`${apiLocation}/signin`);
-};
+const mapStateToProps = createSelector(
+  isSignedInSelector,
+  isSignedIn => ({
+    isSignedIn
+  })
+);
 
 function Login(props) {
-  const { children, navigate, ...restProps } = props;
+  const {
+    block,
+    'data-test-label': dataTestLabel,
+    children,
+    isSignedIn
+  } = props;
+  const href = isSignedIn ? '/learn' : `${apiLocation}/signin`;
   return (
-    <a href='/signin' onClick={createOnClick(navigate)}>
-      <Button
-        {...restProps}
-        bsStyle='default'
-        className={
-          (restProps.block ? 'btn-cta-big' : '') + ' signup-btn btn-cta'
-        }
-        >
-        {children || 'Sign In'}
-      </Button>
-    </a>
+    <Button
+      bsStyle='default'
+      className={(block ? 'btn-cta-big btn-block' : '') + ' signup-btn btn-cta'}
+      data-test-label={dataTestLabel}
+      href={href}
+      onClick={() => gtagReportConversion()}
+    >
+      {children || 'Sign In'}
+    </Button>
   );
 }
 
 Login.displayName = 'Login';
 Login.propTypes = {
+  block: PropTypes.bool,
   children: PropTypes.any,
-  navigate: PropTypes.func.isRequired
+  'data-test-label': PropTypes.string,
+  isSignedIn: PropTypes.bool
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Login);
+export default connect(mapStateToProps)(Login);
